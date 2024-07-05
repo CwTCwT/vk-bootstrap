@@ -27,6 +27,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include "VkBootstrapDispatch.h"
+#include "VkBootstrapFeatureChain.h"
 
 #ifdef VK_MAKE_API_VERSION
 #define VKB_MAKE_VK_VERSION(variant, major, minor, patch) VK_MAKE_API_VERSION(variant, major, minor, patch)
@@ -167,7 +168,10 @@ struct GenericFeaturesPNextNode {
 
     template <typename T> GenericFeaturesPNextNode(T const& features) noexcept {
         memset(fields, UINT8_MAX, sizeof(VkBool32) * field_capacity);
-        memcpy(this, &features, sizeof(T));
+        sType = static_cast<VkStructureType>(features.sType);
+        pNext = features.pNext;
+        const size_t bool_count = vkb::detail::get_features_struct_bool_count(sType);
+        memcpy(fields, &(features.sType) + sizeof(VkBaseOutStructure), sizeof(VkBool32) * bool_count);
     }
 
     static bool match(GenericFeaturesPNextNode const& requested, GenericFeaturesPNextNode const& supported) noexcept;
